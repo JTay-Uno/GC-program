@@ -8,10 +8,16 @@ import datetime
 
 
 class Logic(QMainWindow, Ui_mainWindow):
+    """
+    A class for the GUI logic
+    """
     FIELDNAMES = ['searchCat', 'gcItemNumber', 'brand', 'displayName', 'condition', 'seoUrl', 'listPrice', 'price',
                   'storeName', 'firstDate', 'priceHistory']
 
     def __init__(self):
+        """
+        Method that sets the default values for Logic class
+        """
         super().__init__()
         self.setupUi(self)
         self.items_TableWidget.setColumnWidth(0, 10)
@@ -24,7 +30,10 @@ class Logic(QMainWindow, Ui_mainWindow):
         self.exit_pushButton.clicked.connect(self.close)
 
     def get_html(self):
-        'https://www.guitarcenter.com/Used/Ibanez/Guitars.gc?Ntt=prestige&Ns=pLH&recsPerPage=96'
+        """
+        Method that could be used to get HTML data from a URL - not used in this example
+        """
+        #'https://www.guitarcenter.com/Used/Ibanez/Guitars.gc?Ntt=prestige&Ns=pLH&recsPerPage=96'
 
         htmldata = requests.get(self.searchUrl_Entry.text())
         if htmldata.status_code == 200:
@@ -32,6 +41,9 @@ class Logic(QMainWindow, Ui_mainWindow):
                 file.write(htmldata.text)
 
     def get_html_file(self):
+        """
+        Method to take submitted html file, process it, and display it
+        """
         if self.searchName_Entry.text() == '':
             self.outputText_Label.setText("Enter a Search Name")
         else:
@@ -45,6 +57,9 @@ class Logic(QMainWindow, Ui_mainWindow):
                 self.outputText_Label.setText("Invalid html file location")
 
     def display_data(self):
+        """
+        Method that displays the data from temp_data.csv to items_TableWidget
+        """
         with open('temp_data.csv', 'r') as file:
             reader = csv.DictReader(file)
 
@@ -61,6 +76,14 @@ class Logic(QMainWindow, Ui_mainWindow):
                 row += 1
 
     def parse_html(self, htmldata, search_name):
+        """
+        Method that processes the html data and writes it to temp_data.csv. FIELDNAMES are the fieldnames for the csv file.
+            FIELDNAMES = ['searchCat', 'gcItemNumber', 'brand', 'displayName', 'condition', 'seoUrl', 'listPrice', 'price',
+                  'storeName', 'firstDate', 'priceHistory']
+        :param htmldata: string input from the user submitted html file
+        :param search_name: string input from the user
+
+        """
         tempDict = dict.fromkeys(self.FIELDNAMES, '')
         time = datetime.datetime.now()
         form_time = time.strftime("%Y-%m-%d, %H:%M")
@@ -69,21 +92,21 @@ class Logic(QMainWindow, Ui_mainWindow):
             csv_writer = csv.DictWriter(csv_file, fieldnames=self.FIELDNAMES)
             csv_writer.writeheader()
             #csv_writer.writerow({'searchCat': f'**{search_name}'})
-            search_results = re.search('"hits":(.*?),"hitsPerPage"', htmldata)
+            search_results = re.search('"hits":(.*?),"hitsPerPage"', htmldata)      #strips the search hits out of the html file
 
             if search_results:
-                results = search_results.group().split("},{")
+                results = search_results.group().split("},{")                              #splits the entries into a list
 
                 for result in results:
-                    for field in self.FIELDNAMES:
-                        if field == 'condition':
+                    for field in self.FIELDNAMES:                                          #the fieldnames are not in any particular order
+                        if field == 'condition':                                            #Regular expressions are used to strip out the value.
                             tempSearch = re.search(r'u003e .+?"', result)
                         elif field == 'price' or field == 'listPrice':
                             tempSearch = re.search(field + '":.+?[,}]', result)
                         else:
                             tempSearch = re.search(field + '":".+?"', result)
 
-                        if tempSearch:
+                        if tempSearch:                                                      #Removing the fieldname and other unwanted characters
                             if field == 'brand':
                                 tempDict[field] = tempSearch.group().lstrip(field + r'":"{"value":"').rstrip('",}')
                             elif field == 'condition':
@@ -92,7 +115,7 @@ class Logic(QMainWindow, Ui_mainWindow):
                                 tempDict[field] = tempSearch.group().lstrip(f'{field}+":"').rstrip('",}')
 
                     if field == 'listPrice' and tempDict['price'] == '': tempDict['price'] = tempDict['listPrice']
-                    tempDict['priceHistory'] = f"{form_time}, {tempDict['price']}"
+                    tempDict['priceHistory'] = f"{form_time}, {tempDict['price']}"          #adding date, time, and search category
                     tempDict['firstDate'] = form_time
                     tempDict['searchCat'] = search_name
                     csv_writer.writerow(tempDict)
