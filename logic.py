@@ -14,7 +14,7 @@ class Logic(QMainWindow, Ui_mainWindow):
     FIELDNAMES = ['searchCat', 'gcItemNumber', 'brand', 'displayName', 'condition', 'seoUrl', 'listPrice', 'price',
                   'storeName', 'firstDate', 'priceHistory']
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Method that sets the default values for Logic class
         """
@@ -29,7 +29,7 @@ class Logic(QMainWindow, Ui_mainWindow):
         self.search_pushButton.clicked.connect(lambda: self.get_html_file())
         self.exit_pushButton.clicked.connect(self.close)
 
-    def get_html(self):
+    def get_html(self) -> None:
         """
         Method that could be used to get HTML data from a URL - not used in this example
         """
@@ -40,7 +40,7 @@ class Logic(QMainWindow, Ui_mainWindow):
             with open('GSpage2.html', 'w') as file:
                 file.write(htmldata.text)
 
-    def get_html_file(self):
+    def get_html_file(self) -> None:
         """
         Method to take submitted html file, process it, and display it
         """
@@ -56,7 +56,7 @@ class Logic(QMainWindow, Ui_mainWindow):
             else:
                 self.outputText_Label.setText("Invalid html file location")
 
-    def display_data(self):
+    def display_data(self) -> None:
         """
         Method that displays the data from temp_data.csv to items_TableWidget
         """
@@ -75,7 +75,7 @@ class Logic(QMainWindow, Ui_mainWindow):
                 self.items_TableWidget.setItem(row, 4, QtWidgets.QTableWidgetItem(f"$ {guitar['listPrice']}"))
                 row += 1
 
-    def parse_html(self, htmldata, search_name):
+    def parse_html(self, htmldata:str, search_name:str) -> None:
         """
         Method that processes the html data and writes it to temp_data.csv. FIELDNAMES are the fieldnames for the csv file.
             FIELDNAMES = ['searchCat', 'gcItemNumber', 'brand', 'displayName', 'condition', 'seoUrl', 'listPrice', 'price',
